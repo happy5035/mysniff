@@ -36,7 +36,6 @@ class My_Sniff():
             Host = self.getfieldval(request, "Host")
             Path = self.getfieldval(request, "Path")
             url = Host + Path
-            print url
             if self.sites.get(Host) is not None:
                 self.save_to_database(url)
             else:
@@ -47,7 +46,7 @@ class My_Sniff():
 
     def save_to_database(self, url):
         count = self.mysql.query(url)
-        print count
+        print url +'is exsist : '+str(count)
         if count == 0:
             self.mysql.insert(url)
 

